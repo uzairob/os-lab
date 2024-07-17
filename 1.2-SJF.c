@@ -92,3 +92,90 @@ int main() {
 
     return 0;
 }
+
+
+
+
+
+///simplified
+
+#include <stdio.h>
+
+// Function to find the completion time, waiting time, and turnaround time for each process
+void findCompletionTime(int processes[], int n, int bt[], int at[], int wt[], int tat[], int ct[]) {
+    int currentTime = 0;
+    int completion[n];
+    float avgTAT = 0.0;
+    float avgWT = 0.0;
+
+    // Initialize the completion array with -1 indicating that no process is completed initially
+    for (int i = 0; i < n; i++)
+        completion[i] = -1;
+
+    // Loop to find completion time for each process
+    for (int i = 0; i < n; i++) {
+        int minIndex = -1, minTime = 999999;
+
+        // Find the process with the minimum burst time that is not yet completed and has arrived
+        for (int j = 0; j < n; j++) {
+            if (bt[j] < minTime && completion[j] == -1 && at[j] <= currentTime) {
+                minIndex = j;
+                minTime = bt[j];
+            }
+        }
+
+        // If no process has arrived at the current time, increment the time
+        if (minIndex == -1) {
+            currentTime++;
+            i--;
+            continue;
+        }
+
+        // Calculate completion time for the selected process
+        completion[minIndex] = currentTime + bt[minIndex];
+
+        // Calculate waiting time and turnaround time for the selected process
+        wt[minIndex] = currentTime - at[minIndex];
+        tat[minIndex] = wt[minIndex] + bt[minIndex];
+        avgTAT += tat[minIndex];
+        avgWT += wt[minIndex];
+
+        // Update the current time to the completion time of the selected process
+        currentTime = completion[minIndex];
+    }
+
+    // Print the results
+    printf("Process\tArrival Time\tBurst Time\tWaiting Time\tTurnaround Time\tCompletion Time\n");
+    for (int i = 0; i < n; i++) {
+        ct[i] = completion[i];
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i], at[i], bt[i], wt[i], tat[i], ct[i]);
+    }
+    printf("Average turn around time = %f\n", avgTAT / n);
+    printf("Average waiting time = %f\n", avgWT / n);
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    int processes[n];
+    int burst_time[n];
+    int arrival_time[n];
+
+    // Input arrival time and burst time for each process
+    printf("Enter the arrival time and burst time for each process:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Arrival time and Burst time for process %d: ", i + 1);
+        scanf("%d%d", &arrival_time[i], &burst_time[i]);
+        processes[i] = i + 1;
+    }
+
+    int wt[n], tat[n], ct[n];
+
+    // Call the function to find completion time, waiting time, and turnaround time
+    printf("\nSJF Scheduling:\n");
+    findCompletionTime(processes, n, burst_time, arrival_time, wt, tat, ct);
+
+    return 0;
+}
