@@ -77,3 +77,115 @@ int main() {
 
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//simplified 
+
+#include <stdio.h>
+#include <limits.h>
+
+void findCompletionTime(int processes[], int n, int bt[], int at[], int wt[], int tat[], int ct[], int rt[], int quantum) {
+    int remaining_bt[n];
+    int response[n];
+    for (int i = 0; i < n; i++) {
+        remaining_bt[i] = bt[i]; // Initialize remaining burst times
+        response[i] = -1; // Initialize response times to -1 (indicating not started yet)
+    }
+
+    int complete = 0, currentTime = 0, t;
+    float avgWT = 0, avgTAT = 0, avgRT = 0;
+
+    while (complete != n) {
+        int done = 1;
+
+        for (int i = 0; i < n; i++) {
+            if (remaining_bt[i] > 0) {
+                done = 0; // There is a pending process
+
+                if (response[i] == -1) {
+                    response[i] = currentTime - at[i]; // Calculate response time for the first execution
+                }
+
+                if (remaining_bt[i] > quantum) {
+                    currentTime += quantum;
+                    remaining_bt[i] -= quantum;
+                } else {
+                    currentTime += remaining_bt[i];
+                    wt[i] = currentTime - bt[i] - at[i];
+                    remaining_bt[i] = 0;
+                    complete++;
+                    tat[i] = bt[i] + wt[i];
+                    ct[i] = currentTime; // Completion time
+                }
+            }
+        }
+
+        if (done == 1) {
+            break;
+        }
+    }
+
+    // Calculate response time
+    for (int i = 0; i < n; i++) {
+        rt[i] = response[i];
+        avgRT += rt[i];
+    }
+
+    // Calculate average WT and TAT
+    for (int i = 0; i < n; i++) {
+        avgWT += wt[i];
+        avgTAT += tat[i];
+    }
+
+    // Print results
+    printf("Process\tArrival Time\tBurst Time\tWaiting Time\tTurnaround Time\tCompletion Time\tResponse Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i], at[i], bt[i], wt[i], tat[i], ct[i], rt[i]);
+    }
+    printf("Average turn around time = %.2f\n", avgTAT / n);
+    printf("Average waiting time = %.2f\n", avgWT / n);
+    printf("Average response time = %.2f\n", avgRT / n);
+}
+
+int main() {
+    int n, quantum;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    int processes[n], burst_time[n], arrival_time[n];
+
+    printf("Enter the arrival and burst times for each process:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Process %d: ", i + 1);
+        scanf("%d%d", &arrival_time[i], &burst_time[i]);
+        processes[i] = i + 1;
+    }
+
+    printf("Enter the time quantum: ");
+    scanf("%d", &quantum);
+
+    int wt[n], tat[n], ct[n], rt[n];
+
+    printf("\nRound Robin Scheduling:\n");
+    findCompletionTime(processes, n, burst_time, arrival_time, wt, tat, ct, rt, quantum);
+
+    return 0;
+}
